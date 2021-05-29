@@ -7,24 +7,34 @@
     "build": "dune build -p #{self.name}",
     "release": {
       "bin": "obaml",
-      "includePackages": [
-        "root",
-        "@opam/camomile"
-      ]
+      "includePackages": [ "root", "@opam/camomile" ]
+    },
+    "buildEnv": {
+      "PGHOST": "localhost",
+      "PGPORT": "5432",
+      "PGUSER": "postgres",
+      "PGPASSWORD": "",
+      "PGDATABASE": "oban_test"
+    },
+    "exportedEnv": {
+      "PGHOST": { "val": "localhost", "scope": "global" },
+      "PGPORT": { "val": "5432", "scope": "global" },
+      "PGUSER": { "val": "postgres", "scope": "global" },
+      "PGPASSWORD": { "val": "", "scope": "global" },
+      "PGDATABASE": { "val": "oban_test", "scope": "global" }
     }
   },
-  "scripts": {
-    "test": "esy x obaml"
-  },
+  "scripts": { "test": "esy x obaml" },
   "dependencies": {
-    "@opam/dune": "*",
     "@opam/base": ">= 0.14.1",
     "@opam/core": ">= 0.14.1",
     "@opam/core_kernel": ">= 0.14.1",
+    "@opam/dune": "*",
+    "@opam/ocaml-lsp-server": "1.6.1",
+    "@opam/pgocaml": "4.2.2",
+    "@opam/pgocaml_ppx": "4.2.2",
+    "@opam/yojson": "1.7.0",
     "ocaml": ">= 4.12.0"
   },
-  "devDependencies": {
-    "@opam/merlin": "4.2-412",
-    "ocaml": "4.12.0"
-  }
+  "devDependencies": { "@opam/merlin": "4.2-412", "ocaml": "4.12.0" }
 }
