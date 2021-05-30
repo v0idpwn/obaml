@@ -32,6 +32,16 @@ let ack_result dbh impl (result : Job_result.t) : unit =
   | Discard (job, reason) -> Query.discard_job dbh job.id reason
   | Snooze (job, time) -> Query.snooze_job dbh job.id time
 
+
+(* Default workers *)
+module Default_workers = struct
+  (* Use this worker as a fallback *)
+  module Worker_not_found : Oban_worker = struct
+    let perform job = Job_result.discard job "Worker not found"
+    let backoff (job : Job.t) = 1
+  end
+end
+
 (* Sample implementation example *)
 module My_worker_a : Oban_worker = struct
   let perform job = Job_result.ok job
@@ -48,7 +58,7 @@ module My_impl : Oban_impl = struct
     match name with
     | "Elixir.MyApp.MyWorkerA" -> (module My_worker_a : Oban_worker)
     | "Elixir.MyApp.MyWorkerB" -> (module My_worker_b : Oban_worker)
-    | _ -> (module My_worker_b : Oban_worker)
+    | _ -> (module Default_workers.Worker_not_found : Oban_worker)
 
   let queue = "default"
 end
