@@ -28,11 +28,11 @@ let complete_job dbh job_id =
   SET state = ${Completed}, completed_at = NOW()
   WHERE id = ${job_id}"]
 
-let error_job dbh job_id error =
+let error_job dbh job_id error time =
   [%pgsql dbh 
   "UPDATE oban_jobs
   SET state = ${Retryable}, 
-      scheduled_at = NOW() + interval '20 seconds',
+      scheduled_at = NOW() + ${float_of_int time} * interval '1 second',
       errors = array_append(errors, ${error})
   WHERE id = ${job_id}"]
 
@@ -48,6 +48,6 @@ let snooze_job dbh job_id time =
   [%pgsql dbh 
   "UPDATE oban_jobs
   SET state = ${Scheduled}, 
-      scheduled_at = NOW() + (${float_of_int time} * interval '1 second'),
+      scheduled_at = NOW() + ${float_of_int time} * interval '1 second',
       max_attempts = max_attempts + 1
   WHERE id = ${job_id}"]

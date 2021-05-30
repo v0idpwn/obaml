@@ -4,6 +4,7 @@ open PGOCaml;;
 (* Interface *)
 module type Oban_worker = sig
   val perform : Job.t -> Job_result.t
+  val backoff : Job.t -> int
 end
 
 module type Oban_impl = sig
@@ -17,24 +18,29 @@ let perform_job impl (job : Job.t) : Job_result.t =
   Worker.perform job
 
 (* TODO: error should be stored as jsonb *)
-let ack_result dbh (result : Job_result.t) : unit =
+let ack_result dbh impl (result : Job_result.t) : unit =
+  let module Impl = (val impl : Oban_impl) in
   match result with
   | Ok job -> Query.complete_job dbh job.id
   | Error (job, reason) -> 
       if job.attempt = job.max_attempts then
-        Query.error_job dbh job.id reason
-      else
         Query.discard_job dbh job.id reason
+      else
+        let module Worker = (val Impl.to_worker job.worker : Oban_worker) in
+        let backoff = Worker.backoff(job) in
+        Query.error_job dbh job.id reason backoff
   | Discard (job, reason) -> Query.discard_job dbh job.id reason
   | Snooze (job, time) -> Query.snooze_job dbh job.id time
 
 (* Sample implementation example *)
 module My_worker_a : Oban_worker = struct
   let perform job = Job_result.ok job
+  let backoff (job : Job.t) = (Int32.to_int job.attempt) * 10
 end
 
 module My_worker_b : Oban_worker = struct
   let perform job = Job_result.error job "always fail"
+  let backoff (job : Job.t) = int_of_float ((float_of_int (Int32.to_int job.attempt)) ** 3.)
 end
 
 module My_impl : Oban_impl = struct
@@ -52,5 +58,5 @@ let () =
   let dbh = connect () in
   let jobs = Query.fetch_jobs dbh My_impl.queue 1L in
   let results = List.map (perform_job (module My_impl)) jobs in
-  let _ = List.map (ack_result dbh) results in
+  let _ = List.map (ack_result dbh (module My_impl)) results in
   PGOCaml.close(dbh)
