@@ -28,12 +28,26 @@ let complete_job dbh job_id =
   SET state = ${Completed}, completed_at = NOW()
   WHERE id = ${job_id}"]
 
-(* TODO: backoff *)
-
 let error_job dbh job_id error =
   [%pgsql dbh 
   "UPDATE oban_jobs
   SET state = ${Retryable}, 
       scheduled_at = NOW() + interval '20 seconds',
       errors = array_append(errors, ${error})
+  WHERE id = ${job_id}"]
+
+let discard_job dbh job_id error =
+  [%pgsql dbh 
+  "UPDATE oban_jobs
+  SET state = ${Discarded}, 
+      discarded_at = NOW(),
+      errors = array_append(errors, ${error})
+  WHERE id = ${job_id}"]
+
+let snooze_job dbh job_id time =
+  [%pgsql dbh 
+  "UPDATE oban_jobs
+  SET state = ${Scheduled}, 
+      scheduled_at = NOW() + (${float_of_int time} * interval '1 second'),
+      max_attempts = max_attempts + 1
   WHERE id = ${job_id}"]

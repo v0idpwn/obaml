@@ -1,4 +1,8 @@
-type t = Ok of Job.t | Error of (Job.t * string)
+type t = 
+  | Ok of Job.t 
+  | Error of (Job.t * string)
+  | Discard of (Job.t * string)
+  | Snooze of (Job.t * int)
 
 let ok job = Ok job
 

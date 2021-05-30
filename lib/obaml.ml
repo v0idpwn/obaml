@@ -22,6 +22,8 @@ let ack_result dbh (result : Job_result.t) : unit =
   match result with
   | Ok job -> Query.complete_job dbh job.id
   | Error (job, reason) -> Query.error_job dbh job.id reason
+  | Discard (job, reason) -> Query.discard_job dbh job.id reason
+  | Snooze (job, time) -> Query.snooze_job dbh job.id time
 
 (* Sample implementation example *)
 module My_worker_a : Oban_worker = struct
