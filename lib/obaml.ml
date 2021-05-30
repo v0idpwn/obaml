@@ -1,5 +1,4 @@
 open PGOCaml;;
-(* TODO: open Base, requires fixing pgocaml_ppx so it supports module shadowing *)
 
 (* Interface *)
 module type Oban_worker = sig
@@ -17,7 +16,6 @@ let perform_job impl (job : Job.t) : Job_result.t =
   let module Worker = (val Impl.to_worker job.worker : Oban_worker) in
   Worker.perform job
 
-(* TODO: error should be stored as jsonb *)
 let ack_result dbh impl (result : Job_result.t) : unit =
   let module Impl = (val impl : Oban_impl) in
   match result with

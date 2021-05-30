@@ -33,7 +33,7 @@ let error_job dbh job_id error time =
   "UPDATE oban_jobs
   SET state = ${Retryable}, 
       scheduled_at = NOW() + ${float_of_int time} * interval '1 second',
-      errors = array_append(errors, ${error})
+      errors = errors || format('[{\"attempt\":%s, \"at\":%s, \"error\":%s}]', attempt::text, NOW()::text, ${error}::text)::jsonb
   WHERE id = ${job_id}"]
 
 let discard_job dbh job_id error =
@@ -41,7 +41,7 @@ let discard_job dbh job_id error =
   "UPDATE oban_jobs
   SET state = ${Discarded}, 
       discarded_at = NOW(),
-      errors = array_append(errors, ${error})
+      errors = errors || format('[{\"attempt\":%s, \"at\":%s, \"error\":%s}]', attempt::text, NOW()::text, ${error}::text)::jsonb
   WHERE id = ${job_id}"]
 
 let snooze_job dbh job_id time =
