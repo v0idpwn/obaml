@@ -16,12 +16,15 @@ let perform_job impl (job : Job.t) : Job_result.t =
   let module Worker = (val Impl.to_worker job.worker : Oban_worker) in
   Worker.perform job
 
-(* TODO: discard when exceeding attempts *)
 (* TODO: error should be stored as jsonb *)
 let ack_result dbh (result : Job_result.t) : unit =
   match result with
   | Ok job -> Query.complete_job dbh job.id
-  | Error (job, reason) -> Query.error_job dbh job.id reason
+  | Error (job, reason) -> 
+      if job.attempt = job.max_attempts then
+        Query.error_job dbh job.id reason
+      else
+        Query.discard_job dbh job.id reason
   | Discard (job, reason) -> Query.discard_job dbh job.id reason
   | Snooze (job, time) -> Query.snooze_job dbh job.id time
 
