@@ -45,8 +45,7 @@ end
 (* Runtime example *)
 let () =
   let dbh = connect () in
-  let job_objs = Query.fetch_jobs dbh My_impl.queue 1L in
-  let jobs = List.map (Job.t_of_obj) job_objs in
+  let jobs = Query.fetch_jobs dbh My_impl.queue 1L in
   let results = List.map (perform_job (module My_impl)) jobs in
   let _ = List.map (ack_result dbh) results in
   PGOCaml.close(dbh)

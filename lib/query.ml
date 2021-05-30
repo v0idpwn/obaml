@@ -5,19 +5,22 @@ let all dbh =
   [%pgsql.object dbh "select * from oban_jobs"]
 
 let fetch_jobs dbh queue demand =
-  [%pgsql.object dbh
-  "UPDATE oban_jobs
-  SET state = ${Executing},
-      attempted_at = NOW()
-  WHERE id in
-    (SELECT id
-     FROM oban_jobs j
-     WHERE j.state = ${Available}
-     AND j.queue = ${queue}
-     ORDER BY j.priority ASC, j.scheduled_at ASC, j.id ASC
-     LIMIT ${demand}
-     FOR UPDATE skip locked)
-   RETURNING *"]
+  let job_objs =
+    [%pgsql.object dbh
+    "UPDATE oban_jobs
+    SET state = ${Executing},
+        attempted_at = NOW()
+    WHERE id in
+      (SELECT id
+       FROM oban_jobs j
+       WHERE j.state = ${Available}
+       AND j.queue = ${queue}
+       ORDER BY j.priority ASC, j.scheduled_at ASC, j.id ASC
+       LIMIT ${demand}
+       FOR UPDATE skip locked)
+     RETURNING *"]
+  in
+  List.map (Job.t_of_obj) job_objs
 
 let complete_job dbh job_id =
   [%pgsql dbh 
