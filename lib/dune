@@ -1,6 +1,6 @@
-(executable
+(library
   (name obaml)
   (public_name obaml)
-  (libraries base pgocaml pgocaml_ppx yojson)
+  (libraries pgocaml pgocaml_ppx yojson)
   (preprocess (pps pgocaml_ppx))
 )

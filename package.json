@@ -26,15 +26,15 @@
   },
   "scripts": { "test": "esy x obaml" },
   "dependencies": {
-    "@opam/base": ">= 0.14.1",
-    "@opam/core": ">= 0.14.1",
-    "@opam/core_kernel": ">= 0.14.1",
     "@opam/dune": "*",
-    "@opam/ocaml-lsp-server": "1.6.1",
     "@opam/pgocaml": "4.2.2",
     "@opam/pgocaml_ppx": "4.2.2",
     "@opam/yojson": "1.7.0",
     "ocaml": ">= 4.12.0"
   },
-  "devDependencies": { "@opam/merlin": "4.2-412", "ocaml": "4.12.0" }
+  "devDependencies": {
+    "@opam/merlin": "4.2-412",
+    "@opam/ocaml-lsp-server": "1.6.1",
+    "ocaml": "4.12.0" 
+  }
 }
