@@ -1,5 +1,8 @@
 open PGOCaml;;
 
+(* Exporting internal modules *)
+module Job_result = Job_result
+
 (* Interface *)
 module type Oban_worker = sig
   val perform : Job.t -> Job_result.t
@@ -30,41 +33,11 @@ let ack_result dbh impl (result : Job_result.t) : unit =
   | Discard (job, reason) -> Query.discard_job dbh job.id reason
   | Snooze (job, time) -> Query.snooze_job dbh job.id time
 
-
 (* Default workers *)
 module Default_workers = struct
   (* Use this worker as a fallback *)
   module Worker_not_found : Oban_worker = struct
     let perform job = Job_result.discard job "Worker not found"
-    let backoff (job : Job.t) = 1
+    let backoff _job = 1
   end
 end
-
-(* Sample implementation example *)
-module My_worker_a : Oban_worker = struct
-  let perform job = Job_result.ok job
-  let backoff (job : Job.t) = (Int32.to_int job.attempt) * 10
-end
-
-module My_worker_b : Oban_worker = struct
-  let perform job = Job_result.error job "always fail"
-  let backoff (job : Job.t) = int_of_float ((float_of_int (Int32.to_int job.attempt)) ** 3.)
-end
-
-module My_impl : Oban_impl = struct
-  let to_worker (name : string) =
-    match name with
-    | "Elixir.MyApp.MyWorkerA" -> (module My_worker_a : Oban_worker)
-    | "Elixir.MyApp.MyWorkerB" -> (module My_worker_b : Oban_worker)
-    | _ -> (module Default_workers.Worker_not_found : Oban_worker)
-
-  let queue = "default"
-end
-
-(* Runtime example *)
-let () =
-  let dbh = connect () in
-  let jobs = Query.fetch_jobs dbh My_impl.queue 1L in
-  let results = List.map (perform_job (module My_impl)) jobs in
-  let _ = List.map (ack_result dbh (module My_impl)) results in
-  PGOCaml.close(dbh)
