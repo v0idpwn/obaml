@@ -14,11 +14,11 @@ required structure to run Oban Jobs from Ocaml programs.
 
 ## Roadmap
 
-[X] Fetch jobs
-[X] Execute and ack jobs
-[ ] Insert jobs (basic)
-[ ] Stage jobs
-[ ] Prune
+- [X] Fetch jobs
+- [X] Execute and ack jobs
+- [ ] Insert jobs (basic)
+- [ ] Stage jobs
+- [ ] Prune
 
 ## Credits
 All credits to the Oban team. This is a partial port of the OSS API of Oban to
